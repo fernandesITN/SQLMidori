@@ -266,3 +266,160 @@ select brand, count(*)
 from sales.products
 group by brand
 having count(*) > 10 
+
+JOIN
+
+LEFT JOIN
+
+select * from temp_tables.tabela_1
+select * from temp_tables.tabela_2
+
+select t1.cpf, t1.name, t2.state
+from temp_tables.tabela_1 as t1 left join temp_tables.tabela_2 as t2
+on t1.cpf = t2.cpf
+
+INNER JOIN
+
+select * from temp_tables.tabela_1
+select * from temp_tables.tabela_2
+
+select t1.cpf, t1.name, t2.state
+from temp_tables.tabela_1 as t1 inner join temp_tables.tabela_2 as t2
+on t1.cpf = t2.cpf
+
+RIGHT JOIN
+
+select * from temp_tables.tabela_1
+select * from temp_tables.tabela_2
+
+select t2.cpf, t1.name, t2.state
+from temp_tables.tabela_1 as t1 right join temp_tables.tabela_2 as t2
+on t1.cpf = t2.cpf
+
+FULL JOIN
+
+select * from temp_tables.tabela_1
+select * from temp_tables.tabela_2
+
+select t2.cpf, t1.name, t2.state
+from temp_tables.tabela_1 as t1 full join temp_tables.tabela_2 as t2
+on t1.cpf = t2.cpf
+
+//
+
+select
+	cus.professional_status,
+	count(fun.paid_date) as pagamentos
+from sales.funnel as fun
+left join sales.customers as cus
+	on fun.customer_id = cus.customer_id
+	group by cus.professional_status
+	order by pagamentos desc
+
+select
+	ibge.gender,
+	count(fun.paid_date)
+from sales.funnel as fun
+left join sales.customers as cus
+	on fun.customer_id = cus.customer_id
+left join temp_tables.ibge_genders as ibge
+	on lower(cus.first_name) = ibge.first_name
+group by ibge.gender
+
+select
+	reg.region,
+	count(fun.visit_page_date) as visitas
+from sales.funnel as fun
+left join sales.customers as cus
+	on fun.customer_id = cus.customer_id
+left join temp_tables.regions as reg
+	on lower (cus.city) = lower (reg.city)
+	and lower (cus.state) = lower (reg.state)
+group by reg.region
+order by visitas desc
+
+EXERCICIOS
+
+select * from sales.funnel limit 10
+select * from temp_tables.regions limit 10
+
+select
+	prod.brand,
+	count(*) as visitas
+from sales.funnel as fun
+left join sales.products as prod
+	on fun.product_id = prod.product_id
+group by prod.brand
+order by visitas desc
+
+select
+	store.store_name,
+	count(*) as visitas
+from sales.funnel as fun
+left join sales.stores as store
+	on fun.store_id = store.store_id
+group by store.store_name
+order by visitas desc
+
+select
+	reg.size,
+	count(*) as contagem
+from sales.customers as cus
+left join temp_tables.regions as reg
+	on lower (cus.city) = lower(reg.city)
+	and lower(cus.state) = lower (reg.state)
+group by reg.size
+order by contagem
+
+UNION
+
+select * from sales.products
+union all
+select * from temp_tables.products_2
+
+SUBQUERY
+
+select *
+from sales.products
+where price = (select min(price) from sales.products)
+
+with alguma_tabela as (
+
+select
+	professional_status,
+	(current_date - birth_date)/365 as idade
+from sales.customers
+
+)
+select 
+	professional_status,
+	avg(idade) as idade_media
+from alguma_tabela
+group by professional status
+
+select 
+	professional_status,
+	avg(idade) as idade_media
+from (
+
+select
+	professional_status,
+	(current_date - birth_date)/365 as idade
+from sales.customers
+)as alguma_tabela
+group by professional_status
+
+select
+	fun.visit_id,
+	fun.visit_page_date,
+	sto.store_name,
+	(
+		select count(*)
+		from sales.funnel as fun2
+		where fun2.visit_page_date <= fun.visit_page_date
+		 	and fun2.store_id = fun.store_id
+	) as visitas_acumuladas
+from sales.funnel as fun
+left join sales.stores as sto
+	on fun.store_id = sto.store_id
+order by sto.store_name, fun.visit_page_date
